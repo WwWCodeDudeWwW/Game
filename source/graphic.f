@@ -1,0 +1,25 @@
+	SUBROUTINE ASCII(PIC)
+		CHARACTER(8) PIC
+		CHARACTER(210) LINE
+		CHARACTER(8) DIR
+		CHARACTER(100) FILNAMN
+		INTEGER STREND, TRM
+
+		DIR = 'graphics'
+
+		STREND = TRM(PIC)
+
+		FILNAMN = DIR // '/' // PIC(1:STREND) // '.txt'		
+	
+		OPEN(10, FILE = FILNAMN, STATUS='OLD')
+
+10         	CONTINUE
+	        READ(10, '(A)', END=99) LINE
+                WRITE(*, '(A)') LINE
+                GOTO 10
+
+99   		CONTINUE
+      		CLOSE(10)
+
+	END SUBROUTINE ASCII
+

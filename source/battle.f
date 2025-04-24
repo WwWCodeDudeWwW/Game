@@ -1,0 +1,424 @@
+	SUBROUTINE STRID(NMYID)
+		INTEGER CHRSTA(7), NMYSTA(5,7), RUNDNR, CHRNR, NMYNR
+		INTEGER CHRHP, CHRSTR, CHRACC, CHRDEF, CHRSPD, CHRXP
+		INTEGER NMYHP, NMYSTR, NMYACC, NMYDEF, NMYSPD, NMYXP
+		INTEGER ENEMY(7)
+		REAL I, J, R
+		CHARACTER(10) AKTION, NMYAKT, NMYID
+		LOGICAL ALIVE
+
+		COMMON /LIFE/   ALIVE
+		COMMON /BATTLE/ CHRSTA, NMYSTA
+		COMMON /NMY/    ENEMY
+
+		CHRHP = CHRSTA(1)
+		CHRSPD = CHRSTA(5)
+
+		CALL NMYINI(NMYID)
+		PRINT *, NMYID
+
+		NMYHP = ENEMY(1)
+		NMYSPD = ENEMY(5)
+
+		RUNDNR = 1
+
+		PRINT *, 'ENEMY HP: ', NMYHP
+		PRINT *, 'HERO  HP: ', CHRHP
+
+		DO WHILE (CHRHP .GT. 0 .AND. NMYHP .GT. 0)
+			PRINT *, '-----------------------'
+			PRINT *, '| ROUND', RUNDNR, ' |'
+			PRINT *, '-----------------------'
+
+			PRINT *, '-------------------------'
+			PRINT *, '| HERO  HP', CHRHP, ' |'
+			PRINT *, '| ENEMY HP', NMYHP, ' |'
+			PRINT *, '-------------------------'
+
+
+100			PRINT *, 'WHAT DO YOU DO?'
+			PRINT *, ''
+	                PRINT *, 'LIGHT',' HEAVY',' DEFEND',' BACKPACK'
+        	        READ *, AKTION
+
+			CALL RANDOM_NUMBER(R)
+                        IF (R .GT. 0.75) THEN
+                                NMYAKT = "HEAVY"
+                        ELSE IF (R .LT. 0.75 .AND. R .GT. 0.25) THEN
+                                NMYAKT = "LIGHT"
+                        ELSE
+                                NMYAKT = "DEFEND"
+                        END IF
+
+
+			CHRSTR = CHRSTA(2)
+			CHRACC = CHRSTA(3)
+			CHRDEF = CHRSTA(4)
+
+			NMYSTR = ENEMY(2)
+			NMYACC = ENEMY(3)
+			NMYDEF = ENEMY(4)
+
+			
+			CALL RANDOM_NUMBER(I)
+			CHRNR = INT(I*CHRSPD) + 1
+
+			CALL RANDOM_NUMBER(J)
+			NMYNR = INT(J*NMYSPD) + 1
+
+		IF (AKTION.EQ.'DEFEND'.OR.AKTION.EQ.'BACKPACK') THEN
+			CHRNR = 101
+			IF (AKTION .EQ. 'BACKPACK') THEN
+				CALL INVENT()
+				GOTO 100
+			END IF
+		END IF
+
+		IF (NMYAKT .EQ. 'DEFEND') THEN
+				NMYNR = 100
+		END IF
+
+
+			IF (CHRNR .GT. NMYNR) THEN
+				PRINT *, 'HERO IS FIRST!'
+		CALL HERO(CHRHP,CHRSTR,CHRACC,CHRDEF,NMYHP,
+     1		  	  NMYDEF,AKTION)
+			
+				IF (NMYHP .LE. 0) THEN
+					RETURN
+				END IF
+
+		CALL ENEMYS(NMYID,NMYHP,NMYSTR,NMYACC,NMYDEF,CHRHP,
+     2			   CHRDEF,NMYAKT)
+
+			ELSE
+				PRINT *, 'ENEMY IS FIRST!'
+		CALL ENEMYS(NMYID,NMYHP,NMYSTR,NMYACC,NMYDEF,CHRHP,
+     3			   CHRDEF,NMYAKT)
+
+				CALL CHKDED(CHRHP)
+				IF (.NOT. ALIVE) THEN
+					RETURN
+				END IF
+
+		CALL HERO(CHRHP,CHRSTR,CHRACC,CHRDEF,NMYHP,
+     4			  NMYDEF,AKTION)
+			END IF
+		
+			RUNDNR = RUNDNR + 1	
+			
+		END DO
+
+	END SUBROUTINE STRID		
+	
+
+	SUBROUTINE ATTACK(ETTSTR, ETTACC, TVAHP, TVADEF, AKTION)
+		INTEGER ETT(5), TVA(5), RNG, ETTHP, TVAHP
+		INTEGER ETTSTR, ETTACC, TVADEF
+		REAL R, MODIFY
+		CHARACTER(10) AKTION 
+
+		! ETT SLÅSS MOT TVÅ
+		MODIFY = 1.0
+		
+		IF (AKTION .EQ. 'HEAVY') THEN
+			MODIFY = 1.5
+		END IF
+		
+		ETTSTR = MODIFY*ETTSTR
+		ETTACC = ETTACC/MODIFY
+
+		CALL RANDOM_NUMBER(R)
+		RNG = INT(R*100) + 1
+
+		PRINT *, AKTION, 'ATTACK!'
+	
+		IF (ETTACC .GE. RNG) THEN
+			PRINT *, 'RNG: ', RNG
+			IF (TVADEF .GE. RNG) THEN
+				PRINT *, 'BLOCKED!'
+			ELSE IF (RNG .LE. 20) THEN
+				PRINT*, 'CRIT!'
+				TVAHP = TVAHP - 1.5*ETTSTR
+			ELSE
+				PRINT *, 'HIT!'
+				TVAHP = TVAHP - ETTSTR
+			END IF 
+		ELSE
+			PRINT *, 'MISS!'
+		END IF
+
+	END SUBROUTINE ATTACK
+
+	
+	SUBROUTINE HERO(CHRHP,CHRSTR,CHRACC,CHRDEF,NMYHP,
+     4                    NMYDEF,AKTION)
+
+		INTEGER CHRHP, CHRSTR, CHRACC, CHRDEF
+		INTEGER NMYHP, NMYDEF
+		CHARACTER(10) AKTION, STRING, RADID
+		CHARACTER(100) EQUIP(5)
+		REAL R
+		INTEGER ENEMY(7)
+
+		COMMON /RADID/ RADID
+		COMMON /EQUIPITY/ EQUIP
+		COMMON /NMY/ ENEMY
+
+		STRING = 'knight'
+		
+
+		IF (AKTION .NE. 'DEFEND') THEN
+			
+			CALL RANDOM_SEED()
+			CALL RANDOM_NUMBER(R)
+
+			DO I=1, 5
+     				IF (EQUIP(I) .EQ. 
+     +			    	      'PRIMORDIAL PLUTONIUM PIKE') THEN
+					CHRSTR = CHRSTR + 10
+					CHRACC = CHRACC + 5
+
+					IF (R .GT. 0.67) THEN
+						RADID = 'ENEMY'
+					END IF
+
+				ELSE IF (EQUIP(I) .EQ. 'SWORD') THEN
+					CHRSTR = CHRSTR + 5
+
+				ELSE IF (EQUIP(I) .EQ. 
+     +				'GARGANTUAN GADOLINIUM GAUNTLET') THEN
+				CHRSTR = CHRSTR + 10
+				
+				IF (R .GT. 0.5) THEN
+					PRINT *, 'EFFECT!'
+					ENEMY(5) = ENEMY(5) - 25
+					ENEMY(2) = ENEMY(2) - 5
+				END IF
+
+				ELSE IF (EQUIP(I) .EQ. 
+     +					'ZIRCONIUM ZLASHER') THEN
+					ENEMY(4) = 0
+				END IF 
+			END DO
+		END IF
+	
+		CALL COMBAT(STRING, CHRHP, CHRSTR, CHRACC, CHRDEF,
+     5			NMYHP, NMYDEF, AKTION)
+		CALL WIN(CHRHP, NMYHP)					
+
+	END SUBROUTINE HERO
+
+	
+	SUBROUTINE ENEMYS(NMYID, NMYHP, NMYSTR, NMYACC, NMYDEF,
+     5			CHRHP, CHRDEF, NMYAKT)
+
+		CHARACTER(10) NMYID, NMYAKT 
+		INTEGER NMYHP, NMYSTR, NMYACC, NMYDEF
+		INTEGER CHRHP, CHRDEF
+
+		CALL COMBAT(NMYID, NMYHP, NMYSTR, NMYACC, NMYDEF,
+     5			CHRHP, CHRDEF, NMYAKT)
+		CALL WIN(CHRHP, NMYHP)
+
+	END SUBROUTINE ENEMYS
+
+
+	SUBROUTINE WIN(CHRHP, NMYHP)
+		INTEGER CHRHP, CHRSTA(7), NMYSTA(5,7)
+		INTEGER NMYHP, ENEMY(7)
+		INTEGER LEVEL, LVLIM
+		LOGICAL ALIVE
+
+		COMMON /LIFE/   ALIVE
+		COMMON /BATTLE/ CHRSTA, NMYSTA
+		COMMON /LEVELS/ LEVEL , LVLIM
+		COMMON /NMY/    ENEMY
+
+		
+                CALL CHKDED(CHRHP)
+		
+		IF (.NOT. ALIVE) THEN
+			PRINT *, 'YOU ARE DEAD...'
+			RETURN
+		END IF
+
+		IF (NMYHP .LE. 0) THEN
+                	PRINT *, 'YOU WON!'
+                        CHRSTA(6) = CHRSTA(6) + ENEMY(6)
+			CHRSTA(7) = CHRSTA(7) + ENEMY(7)
+                        PRINT *, 'YOU HAVE', CHRSTA(6), 'XP'
+			PRINT *, 'YOU HAVE', CHRSTA(7), 'GOLD'
+		END IF
+
+		LVLIM = 50 + (LEVEL - 1)*25
+
+		IF (CHRSTA(6) .GE. LVLIM) THEN
+                	LEVEL = LEVEL + 1
+                	PRINT *, 'LEVEL UP!'
+                	PRINT *, 'YOU ARE NOW LEVEL', LEVEL
+                	CHRSTA(1) = CHRSTA(1) + 10
+                	CHRSTA(2) = CHRSTA(2) + 5
+                	CHRSTA(3) = CHRSTA(3) + 3
+                	CHRSTA(4) = CHRSTA(4) + 5
+                	CHRSTA(5) = CHRSTA(5) + 5
+                	CHRSTA(6) = 0
+	        END IF
+
+	END SUBROUTINE WIN
+
+
+	SUBROUTINE CHKDED(CHRHP)
+		INTEGER CHRHP
+		LOGICAL ALIVE
+
+		COMMON /LIFE/ ALIVE
+			
+			IF (CHRHP .LE. 0) THEN
+				ALIVE = .FALSE.
+			END IF
+
+	END SUBROUTINE CHKDED
+
+	
+	SUBROUTINE INVENT()
+		CHARACTER(100) BCKPCK(5), ITEM
+		INTEGER CHRSTA(7), NMYSTA(5,7)
+
+		COMMON /BATTLE/ CHRSTA, NMYSTA
+		COMMON /BACKPACK/ BCKPCK
+
+		DO WHILE(ITEM .NE. 'EXIT')
+			PRINT *, '------------'
+			PRINT *, '| BACKPACK |'
+			PRINT *, '------------'
+
+			DO I=1,5
+				PRINT *, BCKPCK(I)
+			END DO
+
+			READ *, ITEM
+			
+			IF (ITEM .EQ. 'EQUIP') THEN
+				CALL EQUIPS()
+			END IF
+		END DO
+
+	END SUBROUTINE INVENT
+
+
+	SUBROUTINE EQUIPS()
+		CHARACTER(100) CHOICE, EQUIP(5), BCKPCK(5)
+		INTEGER N
+
+		COMMON /EQUIPITY/ EQUIP
+		COMMON /BACKPACK/ BCKPCK
+
+200             PRINT *, 'WHAT DO YOU WANNA EQUIP?'
+                READ *, CHOICE
+		PRINT *, '>', CHOICE, '<'
+		
+		IF (CHOICE .EQ. 'EXIT') THEN
+			RETURN
+		END IF
+
+                DO I=1, 5
+                IF (CHOICE .EQ. BCKPCK(I)) THEN
+                	PRINT *, 'WE GOT IT!'
+                        DO J=1, 5
+                        IF (EQUIP(J) .EQ. ' ') THEN
+                        	N = J - 1
+                                GOTO 100
+                        ELSE
+                                PRINT *, 'NO SPACE'
+                                GOTO 200
+                        END IF
+                        END DO
+
+		ELSE IF (I .EQ. 5) THEN
+			PRINT *, 'YOU DONT HAVE THAT'
+			GOTO 200
+                END IF
+                END DO
+
+		
+100     	EQUIP(N) = BCKPCK(I)
+                BCKPCK(I) = ' '
+                PRINT *, 'EQUIPPED: ', EQUIP(N)
+		GOTO 200
+
+	END SUBROUTINE EQUIPS
+
+	SUBROUTINE NMYINI(NMYID)
+		INTEGER CHRSTA(7), ENEMY(7), NMYSTA(5,7)
+		CHARACTER(10) NMYIDX(5), NMYID 
+		
+		COMMON /NMYIDX/ NMYIDX
+		COMMON /BATTLE/ CHRSTA, NMYSTA
+		COMMON /NMY/    ENEMY
+	
+		DO I=1, 5
+			IF (NMYID .EQ. NMYIDX(I)) THEN
+				DO J=1, 7
+					ENEMY(J) = NMYSTA(I,J) 
+				END DO
+				RETURN
+			END IF
+		END DO
+
+	END SUBROUTINE NMYINI
+
+
+	SUBROUTINE RAD(ID, HP)
+		INTEGER HP, TRNCNT
+		CHARACTER(10) ID, NMYIDX(5), RADID
+			
+		COMMON /TURNS/  TRNCNT
+		COMMON /NMYIDX/ NMYIDX
+		COMMON /RADID/  RADID
+
+		IF (RADID .EQ. 'ENEMY') THEN
+			DO I=1, 5
+				IF (ID .EQ. NMYIDX(I)) THEN
+					PRINT *, 'IRRADIATED...' 
+					HP = HP - 5
+					TRNCNT = TRNCNT + 1
+					PRINT *, 'DOSE: ', TRNCNT, 'Sv'
+					IF (TRNCNT .EQ. 3) THEN
+						RADID = ''
+
+					END IF
+				END IF
+			END DO
+		END IF
+		
+	END SUBROUTINE RAD
+
+
+	SUBROUTINE COMBAT(ID, HP, STR, ACC, DEF,OPPHP,
+     5			OPPDEF, AKT)
+		CHARACTER(10) ID, AKT 
+		INTEGER HP, STR, ACC, DEF
+		INTEGER OPPHP, OPPDEF, ENEMY(7)
+
+		COMMON /NMY/ ENEMY
+				
+		PRINT *, ID, 'HP: ', HP
+                PRINT *, ID, 'TURN'
+		PRINT *, 'DEFENSE: ', ENEMY(4)
+			
+		CALL ASCII(ID)
+
+		CALL RAD(ID, HP)
+
+                IF (AKT .EQ. 'DEFEND') THEN
+			PRINT *, AKT, '!'
+			DEF = DEF + 55
+                ELSE
+                       	CALL ATTACK(STR, ACC, OPPHP, OPPDEF, AKT)
+		END IF
+
+                CALL SLEEP(1)
+                PRINT *, ' '
+
+	END SUBROUTINE COMBAT

@@ -1,0 +1,93 @@
+	SUBROUTINE SHOP()
+		CHARACTER(100) HYLLA(10)
+		INTEGER PRICES(10), N, TRM
+		CHARACTER(100) BCKPCK(5)
+		INTEGER CHRSTA(7), VALUE
+		CHARACTER(100) CHOICE		
+
+		COMMON /SHOPPER/ HYLLA
+		COMMON /PRICE/ PRICES
+		COMMON /BACKPACK/ BCKPCK
+		COMMON /BATTLE/ CHRSTA
+
+		PRINT *, '-------------------------'
+		PRINT *, 'WELCOME TO YE OLDE SHOPPE'
+		PRINT *, '-------------------------'
+		
+		N = 1
+
+		DO
+
+100		CONTINUE
+
+		PRINT *, '------------------'
+		PRINT *, '| SHOP INVENTORY |'
+		PRINT *, '------------------'
+		
+		DO I=1, 10
+			PRINT *, I, '.' ,HYLLA(I)
+		END DO
+
+		PRINT *, 'WHAT DO YOU WANNA BUY?'
+		
+		READ *, CHOICE
+
+		VALUE = 1
+
+		N = TRM(CHOICE)
+
+
+		IF (LEN(CHOICE(1:N)) .EQ. 1) THEN
+			READ(CHOICE(1:N),*) VALUE
+			PRINT *, VALUE
+	
+			DO I=5, 1, -1
+				IF (BCKPCK(I) .NE. ' ') THEN
+					N = I + 1
+				END IF
+			END DO
+		
+			IF (HYLLA(VALUE) .NE. ' ') THEN
+				IF (CHRSTA(7) .GE. PRICES(VALUE)) THEN
+		
+				CHRSTA(7) = CHRSTA(7)-PRICES(VALUE)
+				BCKPCK(N) = HYLLA(VALUE)
+				HYLLA(VALUE) = ' '
+				N = N + 1
+	
+				ELSE
+				       PRINT *,'YOU CANNOT AFFORD THAT'
+				END IF
+			ELSE
+				PRINT *, 'WE DO NOT HAVE THAT'
+			END IF
+			GOTO 100
+		ELSE IF (CHOICE .EQ. 'EXIT') THEN
+			GOTO 999
+		END IF
+		END DO		
+
+999		PRINT *, '------------'
+		PRINT *, '| BACKPACK |'
+		PRINT *, '------------'
+		DO I=1, 5
+			PRINT *, BCKPCK(I)
+		END DO
+		PRINT *, 'MONEY:', CHRSTA(7), 'GOLD'
+
+	END SUBROUTINE SHOP
+		
+
+	FUNCTION TRM(STRING)
+		CHARACTER*100 STRING
+		INTEGER TRM		
+
+		DO I=1,100
+			IF (STRING(I:I) .EQ. ' ') THEN
+				TRM = I-1
+				PRINT *, 'LENGTH IS: ', TRM
+				RETURN
+			END IF
+		END DO
+
+	END FUNCTION TRM
