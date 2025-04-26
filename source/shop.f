@@ -3,7 +3,8 @@
 		INTEGER PRICES(10), N, TRM
 		CHARACTER(100) BCKPCK(5)
 		INTEGER CHRSTA(7), VALUE
-		CHARACTER(100) CHOICE		
+		CHARACTER(100) CHOICE
+		LOGICAL FIRST		
 
 		COMMON /SHOPPER/ HYLLA
 		COMMON /PRICE/ PRICES
@@ -16,10 +17,12 @@
 		
 		N = 1
 
+		FIRST = .TRUE.
+
 		DO
 
 100		CONTINUE
-
+		PRINT *, 'FIRST N IS: ', N
 		PRINT *, '------------------'
 		PRINT *, '| SHOP INVENTORY |'
 		PRINT *, '------------------'
@@ -36,24 +39,36 @@
 
 		N = TRM(CHOICE)
 
-
 		IF (LEN(CHOICE(1:N)) .EQ. 1) THEN
 			READ(CHOICE(1:N),*) VALUE
 			PRINT *, VALUE
 	
-			DO I=5, 1, -1
-				IF (BCKPCK(I) .NE. ' ') THEN
-					N = I + 1
-				END IF
-			END DO
+			IF (FIRST) THEN
+				DO I=5, 1, -1
+					IF (BCKPCK(I) .NE. '' 
+     +					.AND. I .LT. 5) THEN
+						N = I + 1
+						PRINT *, 'THEN N IS:',N
+					ELSE IF (BCKPCK(5) .NE.'') THEN
+						PRINT *,'BACKPACK FULL'
+					ELSE
+						N = 5
+					END IF
+				END DO
+				PRINT *, FIRST
+				FIRST = .FALSE.
+				PRINT *, FIRST
+				PRINT *, 'THEN N IS: ', N
+			END IF
 		
 			IF (HYLLA(VALUE) .NE. ' ') THEN
 				IF (CHRSTA(7) .GE. PRICES(VALUE)) THEN
-		
+				PRINT *, 'THEN N IS: ', N
 				CHRSTA(7) = CHRSTA(7)-PRICES(VALUE)
 				BCKPCK(N) = HYLLA(VALUE)
-				HYLLA(VALUE) = ' '
+				HYLLA(VALUE) = ''
 				N = N + 1
+				PRINT *, 'LASTLY N IS: ', N
 	
 				ELSE
 				       PRINT *,'YOU CANNOT AFFORD THAT'
@@ -62,8 +77,10 @@
 				PRINT *, 'WE DO NOT HAVE THAT'
 			END IF
 			GOTO 100
+		
 		ELSE IF (CHOICE .EQ. 'EXIT') THEN
-			GOTO 999
+		GOTO 999
+
 		END IF
 		END DO		
 
@@ -80,7 +97,7 @@
 
 	FUNCTION TRM(STRING)
 		CHARACTER*100 STRING
-		INTEGER TRM		
+		INTEGER TRM, I		
 
 		DO I=1,100
 			IF (STRING(I:I) .EQ. ' ') THEN
@@ -90,4 +107,23 @@
 			END IF
 		END DO
 
+		TRM = 0
+
 	END FUNCTION TRM
+
+
+	FUNCTION TRIIM(STRING)
+		CHARACTER*100 STRING
+		INTEGER TRIIM, I		
+
+		DO I=100,1, -1
+			IF (STRING(I:I) .NE. ' ') THEN
+				TRIIM = I
+				PRINT *, 'LENGTH IS: ', TRIIM
+				RETURN
+			END IF
+		END DO
+
+		TRIIM = 0
+
+	END FUNCTION TRIIM

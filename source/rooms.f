@@ -195,6 +195,37 @@
 
 		CALL STRID(BOSS)
 
+		
+		OPEN(20, FILE='text/end.txt', STATUS='OLD')
+
+20      	CONTINUE
+
+        	READ(20, '(A)', END=999) LINE
+        	WRITE(*, '(A)') LINE
+        	CALL SLEEP(2)
+        	GOTO 20
+
+999     	CONTINUE
+        	CLOSE(20)
+
+
+        	PRINT *, ' '
+        	PRINT *, ' CREDITS'
+        	PRINT *, '*********'
+
+        	OPEN(30, FILE='text/credits.txt', STATUS='OLD')
+
+30      	CONTINUE
+
+        	READ(30, '(A)', END=9) LINE
+        	WRITE(*, '(A)') LINE
+        	CALL SLEEP(2)
+        	GOTO 30
+
+9       	CONTINUE
+        	CLOSE(30)
+
+
         END SUBROUTINE HALA
 
 

@@ -1,0 +1,55 @@
+	SUBROUTINE AUDIO(FILE)
+		CHARACTER*500 COM2
+		CHARACTER*100 VALUE, COM1
+		CHARACTER*14 FIL
+		CHARACTER*8 FILE
+		CHARACTER*6 DIR
+		INTEGER N, M
+
+		DIR = 'audio/'
+
+		FIL = ''
+
+		FIL = DIR//FILE
+
+		PRINT *, FIL
+
+		VALUE = ''
+
+		CALL CHEKOS(VALUE)
+
+		PRINT *, 'Value is: ', VALUE
+
+		IF (VALUE .EQ. 'LINUX') THEN
+			PRINT *, 'LINUS TORVALDSSSSSSS!'
+			COM2 = 'aplay '//FIL
+
+		ELSE IF (VALUE .EQ. 'WINDOWS') THEN
+			PRINT *, 'BILL GATES :('
+		COM1 = 'powershell -c "(New-Object Media.SoundPlayer'
+		COM2 = COM1 // '''' // FIL // '''' // ').PlaySync()'
+		END IF
+
+		PRINT *, COM2
+		CALL SYSTEM(COM2)
+	
+	END SUBROUTINE AUDIO
+	
+
+	SUBROUTINE CHEKOS(VALUE)
+		CHARACTER*100 VALUE, COMSPEC, SHELL, VAL
+		INTEGER IERR		
+		
+		VAL = VALUE
+
+		VALUE = ''
+
+		CALL SYSTEM('echo $COMSPEC$', IERR)
+			IF (IERR .EQ. 0) THEN
+				VALUE = 'WINDOWS'
+			ELSE
+				VALUE = 'LINUX'
+			END IF
+		PRINT *, 'Value is: ', VALUE, VAL
+
+	END SUBROUTINE CHEKOS
