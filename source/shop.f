@@ -22,7 +22,6 @@
 		DO
 
 100		CONTINUE
-		PRINT *, 'FIRST N IS: ', N
 		PRINT *, '------------------'
 		PRINT *, '| SHOP INVENTORY |'
 		PRINT *, '------------------'
@@ -39,31 +38,34 @@
 
 		N = TRM(CHOICE)
 
+		PRINT *, PRICES
+
 		IF (LEN(CHOICE(1:N)) .EQ. 1) THEN
 			READ(CHOICE(1:N),*) VALUE
-			PRINT *, VALUE
+				PRINT *, VALUE
 	
 			IF (FIRST) THEN
-				DO I=5, 1, -1
-					IF (BCKPCK(I) .NE. '' 
-     +					.AND. I .LT. 5) THEN
-						N = I + 1
-						PRINT *, 'THEN N IS:',N
+				DO I=1, 5
+					IF (BCKPCK(I) .EQ. '') THEN
+						N = I
+						GOTO 200
 					ELSE IF (BCKPCK(5) .NE.'') THEN
 						PRINT *,'BACKPACK FULL'
 					ELSE
 						N = 5
 					END IF
 				END DO
-				PRINT *, FIRST
+
 				FIRST = .FALSE.
-				PRINT *, FIRST
-				PRINT *, 'THEN N IS: ', N
 			END IF
-		
-			IF (HYLLA(VALUE) .NE. ' ') THEN
+	
+200			CONTINUE	
+			IF (HYLLA(VALUE) .NE. '') THEN
+				PRINT *, 'ITEM IS: ', HYLLA(VALUE)
+				PRINT *, 'MONEY: ', CHRSTA(7)
+				PRINT *, 'PRICE: ', PRICES(VALUE)
 				IF (CHRSTA(7) .GE. PRICES(VALUE)) THEN
-				PRINT *, 'THEN N IS: ', N
+				PRINT *, 'YOU CAN AFFORD IT!'
 				CHRSTA(7) = CHRSTA(7)-PRICES(VALUE)
 				BCKPCK(N) = HYLLA(VALUE)
 				HYLLA(VALUE) = ''
